@@ -9,6 +9,7 @@
 </head>
 <body class="bg-zinc-950 text-zinc-100 min-h-screen font-sans">
 
+    <!-- AUTH GATE -->
     <div id="auth-gate" class="min-h-screen flex items-center justify-center bg-zinc-950 px-4">
         <div class="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-xl p-8 shadow-2xl space-y-6">
             <div class="text-center space-y-2">
@@ -36,7 +37,7 @@
                 </p>
             </form>
 
-            <<form id="register-form" class="space-y-4 hidden">
+            <form id="register-form" class="space-y-4 hidden">
                 <div class="space-y-1">
                     <label class="text-[10px] uppercase tracking-widest text-zinc-500 font-mono font-bold">Email Address</label>
                     <input type="email" id="register-email" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-zinc-700 transition font-mono">
@@ -45,23 +46,6 @@
                     <label class="text-[10px] uppercase tracking-widest text-zinc-500 font-mono font-bold">Choose Password</label>
                     <input type="password" id="register-password" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-zinc-700 transition font-mono">
                 </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-1">
-                        <label class="text-[10px] uppercase tracking-widest text-zinc-500 font-mono font-bold">Birth Date</label>
-                        <input type="date" id="register-birth-date" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700 transition font-mono">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] uppercase tracking-widest text-zinc-500 font-mono font-bold">Birth Time</label>
-                        <input type="time" id="register-birth-time" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2.5 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700 transition font-mono">
-                    </div>
-                </div>
-                
-                <div class="space-y-1">
-                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 font-mono font-bold">Birth Place (City, State/Country)</label>
-                    <input type="text" id="register-birth-place" placeholder="e.g., Richland, WA" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-zinc-700 transition font-mono placeholder-zinc-700">
-                </div>
-
                 <button type="submit" class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-100 font-mono text-xs font-bold py-3 rounded-lg tracking-widest uppercase transition shadow-md">
                     Register System Profile
                 </button>
@@ -72,39 +56,158 @@
         </div>
     </div>
 
+    <!-- DASHBOARD -->
     <div id="dashboard" class="hidden">
-        <header class="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <span class="font-bold tracking-widest text-sm uppercase text-zinc-200">Celestial//Engine</span>
-                <span class="bg-zinc-800 text-zinc-400 text-[10px] uppercase px-2 py-0.5 rounded tracking-wide">Beta Tier</span>
+        <!-- Header -->
+        <header class="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur sticky top-0 z-50 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <span class="font-bold tracking-widest text-sm uppercase text-zinc-200">Celestial//Engine</span>
+                    <span class="bg-zinc-800 text-zinc-400 text-[10px] uppercase px-2 py-0.5 rounded tracking-wide">Beta Tier</span>
+                </div>
+                
+                <!-- User Signs Display -->
+                <div class="hidden lg:flex items-center space-x-4 text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-zinc-500">Your Signs:</span>
+                        <span id="user-western-sign" class="bg-violet-950/40 border border-violet-900/50 text-violet-300 px-3 py-1 rounded-full font-medium">Loading...</span>
+                        <span id="user-chinese-sign" class="bg-amber-950/40 border border-amber-900/50 text-amber-300 px-3 py-1 rounded-full font-medium">Loading...</span>
+                    </div>
+                </div>
+
+                <button id="logout-btn" class="text-xs font-medium uppercase tracking-wider border border-zinc-800 rounded px-3 py-1.5 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition cursor-pointer">
+                    Disconnect
+                </button>
             </div>
-            <button id="logout-btn" class="text-xs font-medium uppercase tracking-wider border border-zinc-800 rounded px-3 py-1.5 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition cursor-pointer">
-                Disconnect
-            </button>
         </header>
 
-        <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <main class="max-w-7xl mx-auto p-6">
             
-            <div class="lg:col-span-1 space-y-6">
-                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-xl">
-                    <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-4 border-b border-zinc-800 pb-2">Active Transit Overlay</h2>
-                    <div id="transit-list" class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+            <!-- Time Period Tabs -->
+            <div class="mb-6">
+                <div class="flex space-x-2 border-b border-zinc-800">
+                    <button class="tab-btn active" data-period="daily">
+                        <span>Daily</span>
+                    </button>
+                    <button class="tab-btn" data-period="weekly">
+                        <span>Weekly</span>
+                    </button>
+                    <button class="tab-btn" data-period="monthly">
+                        <span>Monthly</span>
+                    </button>
+                    <button class="tab-btn" data-period="yearly">
+                        <span>Yearly</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Astrology System Tabs -->
+            <div class="mb-6">
+                <div class="flex flex-wrap gap-2">
+                    <button class="system-tab-btn active" data-system="western">
+                        <span class="text-lg mr-1">♈</span> Western Astrology
+                    </button>
+                    <button class="system-tab-btn" data-system="chinese">
+                        <span class="text-lg mr-1">🐉</span> Chinese Zodiac
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Left Sidebar -->
+                <div class="lg:col-span-1 space-y-6">
+                    
+                    <!-- Sign Selector -->
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-xl">
+                        <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-4 border-b border-zinc-800 pb-2">
+                            <span id="selector-title">Select Western Sign</span>
+                        </h2>
+                        
+                        <!-- Western Signs Selector -->
+                        <div id="western-sign-selector" class="space-y-2">
+                            <select id="western-sign-select" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-zinc-700 transition">
+                                <option value="your-sign">Your Sign (Default)</option>
+                                <option value="Aries">♈ Aries (Mar 21 - Apr 19)</option>
+                                <option value="Taurus">♉ Taurus (Apr 20 - May 20)</option>
+                                <option value="Gemini">♊ Gemini (May 21 - Jun 20)</option>
+                                <option value="Cancer">♋ Cancer (Jun 21 - Jul 22)</option>
+                                <option value="Leo">♌ Leo (Jul 23 - Aug 22)</option>
+                                <option value="Virgo">♍ Virgo (Aug 23 - Sep 22)</option>
+                                <option value="Libra">♎ Libra (Sep 23 - Oct 22)</option>
+                                <option value="Scorpio">♏ Scorpio (Oct 23 - Nov 21)</option>
+                                <option value="Sagittarius">♐ Sagittarius (Nov 22 - Dec 21)</option>
+                                <option value="Capricorn">♑ Capricorn (Dec 22 - Jan 19)</option>
+                                <option value="Aquarius">♒ Aquarius (Jan 20 - Feb 18)</option>
+                                <option value="Pisces">♓ Pisces (Feb 19 - Mar 20)</option>
+                            </select>
                         </div>
-                </div>
-            </div>
 
-            <div class="lg:col-span-2">
-                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-xl min-h-[500px]">
-                    <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-3">
-                        <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-400">Personalized Daily Analysis</h2>
-                        <span id="forecast-date" class="text-xs text-zinc-500 font-mono">YYYY-MM-DD</span>
+                        <!-- Chinese Signs Selector -->
+                        <div id="chinese-sign-selector" class="space-y-2 hidden">
+                            <select id="chinese-sign-select" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-zinc-700 transition">
+                                <option value="your-sign">Your Sign (Default)</option>
+                                <option value="Rat">🐀 Rat</option>
+                                <option value="Ox">🐂 Ox</option>
+                                <option value="Tiger">🐅 Tiger</option>
+                                <option value="Rabbit">🐇 Rabbit</option>
+                                <option value="Dragon">🐉 Dragon</option>
+                                <option value="Snake">🐍 Snake</option>
+                                <option value="Horse">🐴 Horse</option>
+                                <option value="Goat">🐐 Goat</option>
+                                <option value="Monkey">🐒 Monkey</option>
+                                <option value="Rooster">🐓 Rooster</option>
+                                <option value="Dog">🐕 Dog</option>
+                                <option value="Pig">🐖 Pig</option>
+                            </select>
+                        </div>
+
+                        <button id="load-reading-btn" class="w-full mt-3 bg-violet-900/30 hover:bg-violet-900/50 border border-violet-800/50 text-violet-300 font-mono text-xs font-bold py-2.5 rounded-lg tracking-widest uppercase transition">
+                            Load Reading
+                        </button>
                     </div>
-                    <div id="horoscope-content" class="prose prose-invert max-w-none text-zinc-300 space-y-4 leading-relaxed text-sm">
-                        <p class="text-zinc-500 animate-pulse">Running geometric synthesis calculations...</p>
+
+                    <!-- Active Transits (Daily only) -->
+                    <div id="transit-panel" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-xl">
+                        <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-4 border-b border-zinc-800 pb-2">Active Transit Overlay</h2>
+                        <div id="transit-list" class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                            <p class="text-zinc-600 text-xs text-center py-4">No transits for this view</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
+                <!-- Main Content Area -->
+                <div class="lg:col-span-2">
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-xl min-h-[500px]">
+                        <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-3">
+                            <div class="flex-1">
+                                <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-400" id="reading-title">Personalized Daily Analysis</h2>
+                                <p class="text-xs text-zinc-500 font-mono mt-1" id="reading-subtitle">
+                                    <span id="current-sign-display">Your Sign</span> • <span id="forecast-date">Loading...</span>
+                                </p>
+                            </div>
+                            <button id="refresh-reading-btn" class="flex items-center space-x-2 text-xs text-zinc-500 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 px-3 py-1.5 rounded-lg transition" title="Generate new reading">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                <span>Regenerate</span>
+                            </button>
+                        </div>
+                        <div id="horoscope-content" class="prose prose-invert max-w-none text-zinc-300 space-y-4 leading-relaxed text-sm">
+                            <p class="text-zinc-500 animate-pulse">Running geometric synthesis calculations...</p>
+                        </div>
+                        
+                        <!-- Cache indicator -->
+                        <div id="cache-indicator" class="hidden mt-4 pt-4 border-t border-zinc-800">
+                            <p class="text-[10px] text-zinc-600 font-mono">
+                                <span class="inline-block w-2 h-2 bg-emerald-500 rounded-full mr-1"></span>
+                                Cached reading • Generated: <span id="cache-time">--</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </main>
     </div>
 

@@ -22,3 +22,86 @@
 .transit-card:hover {
     border-color: #52525b; /* zinc-600 */
 }
+
+/* Tab button styling */
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #71717a; /* zinc-500 */
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: ui-monospace, monospace;
+}
+
+.tab-btn:hover {
+    color: #a1a1aa; /* zinc-400 */
+}
+
+.tab-btn.active {
+    color: #f4f4f5; /* zinc-100 */
+    border-bottom-color: #8b5cf6; /* violet-500 */
+}
+
+/* System tab styling */
+.system-tab-btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #71717a; /* zinc-500 */
+    background: #18181b; /* zinc-900 */
+    border: 1px solid #27272a; /* zinc-800 */
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.system-tab-btn:hover {
+    background: #27272a; /* zinc-800 */
+    border-color: #3f3f46; /* zinc-700 */
+    color: #a1a1aa; /* zinc-400 */
+}
+
+.system-tab-btn.active {
+    background: #5b21b6; /* violet-800 */
+    border-color: #6d28d9; /* violet-700 */
+    color: #f4f4f5; /* zinc-100 */
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Smooth transitions */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
