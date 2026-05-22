@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Celestial Engine Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen font-sans">
+
+    <div id="auth-gate" class="flex items-center justify-center min-h-screen px-4">
+        <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-xl max-w-md w-full shadow-2xl">
+            <h1 class="text-2xl font-bold mb-2 tracking-tight text-center">CELESTIAL ENGINE</h1>
+            <p class="text-zinc-400 text-sm mb-6 text-center">Enter credentials to unlock dual-system metrics.</p>
+            
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">Email Address</label>
+                    <input type="email" id="login-email" required class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-zinc-200 focus:outline-none focus:border-zinc-600 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">Password</label>
+                    <input type="password" id="login-password" required class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-zinc-200 focus:outline-none focus:border-zinc-600 transition">
+                </div>
+                <button type="submit" class="w-full bg-zinc-100 text-zinc-950 font-semibold py-2 rounded mt-2 hover:bg-zinc-200 transition cursor-pointer">
+                    Authenticate Session
+                </button>
+                <p id="auth-error" class="text-red-400 text-xs mt-2 text-center hidden"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboard" class="hidden">
+        <header class="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <span class="font-bold tracking-widest text-sm uppercase text-zinc-200">Celestial//Engine</span>
+                <span class="bg-zinc-800 text-zinc-400 text-[10px] uppercase px-2 py-0.5 rounded tracking-wide">Beta Tier</span>
+            </div>
+            <button id="logout-btn" class="text-xs font-medium uppercase tracking-wider border border-zinc-800 rounded px-3 py-1.5 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition cursor-pointer">
+                Disconnect
+            </button>
+        </header>
+
+        <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-xl">
+                    <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-4 border-b border-zinc-800 pb-2">Active Transit Overlay</h2>
+                    <div id="transit-list" class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                        </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-xl min-h-[500px]">
+                    <div class="flex justify-between items-center mb-6 border-b border-zinc-800 pb-3">
+                        <h2 class="text-xs font-bold uppercase tracking-widest text-zinc-400">Personalized Daily Analysis</h2>
+                        <span id="forecast-date" class="text-xs text-zinc-500 font-mono">YYYY-MM-DD</span>
+                    </div>
+                    <div id="horoscope-content" class="prose prose-invert max-w-none text-zinc-300 space-y-4 leading-relaxed text-sm">
+                        <p class="text-zinc-500 animate-pulse">Running geometric synthesis calculations...</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
