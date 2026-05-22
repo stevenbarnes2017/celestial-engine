@@ -2,13 +2,20 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from app.config import Config
+import os
+
+
 
 
 db = SQLAlchemy()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
+
     app.config.from_object(config_class)
+    # Inside your create_app() or configuration block:
+    app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'super-secret-celestial-key-change-me')
+    
 
     
     CORS(app)
