@@ -86,7 +86,7 @@ def register():
 
         new_user = User(
             email=data['email'],
-            password_hash=security.generate_password_hash(data['password']),
+            password_hash=security.generate_password_hash(data['password'], method='pbkdf2:sha256:600000', salt_length=16),
             birth_date=parsed_date,
             birth_time=parsed_time,
             timezone=data['timezone'],

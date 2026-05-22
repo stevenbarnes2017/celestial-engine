@@ -26,21 +26,23 @@ class User(db.Model):
     planetary_aspects = db.Column(db.JSON, nullable=True)
 
     # --- ADD THESE PASSWORD METHODS AT THE BOTTOM OF THE CLASS ---
+    # --- INSIDE YOUR USER CLASS IN user.py ---
+
     def set_password(self, password):
         """
-        Generates a secure scrypt hash with optimized complexity profiles 
-        to guarantee the final string fits cleanly under the 128-character limit.
+        Forces Werkzeug to use PBKDF2 with SHA-256, generating a tight
+        93-character hash string that safely fits a VARCHAR(128) column.
         """
-        # Lowering complexity parameters shortens the salt/metadata configuration prefix
+        from werkzeug.security import generate_password_hash
         self.password_hash = generate_password_hash(
             password, 
-            method='scrypt:16384:8:1', 
-            salt_length=8
+            method='pbkdf2:sha256:600000', 
+            salt_length=16
         )
 
     def check_password(self, password):
-        """Verifies the incoming password against the stored string signature."""
+        from werkzeug.security import check_password_hash
         return check_password_hash(self.password_hash, password)
-
+    
     def __repr__(self):
         return f"<User {self.email}>"
