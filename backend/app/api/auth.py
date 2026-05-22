@@ -200,3 +200,40 @@ def get_daily_forecast(current_user):
         "active_geometric_transits": active_transits,
         "daily_horoscope": daily_reading
     }), 200
+
+@auth_bp.route('/register', methods=['POST'])
+def register_user():
+    """
+    Public registration endpoint to securely provision new user profiles
+    into the database cluster.
+    """
+    from app.models.user import User
+    from app import db
+
+    data = request.get_json() or {}
+    email = data.get('email')
+    password = data.get('password')
+
+    # Validate inputs
+    if not email or not password:
+        return jsonify({"error": "Missing required email or password fields."}), 400
+
+    # Check for existing user collisions
+    if User.query.filter_by(email=email).first():
+        return jsonify({"error": "An account with this email address already exists."}), 400
+
+    try:
+        new_user = User(email=email)
+        new_user.set_password(password) # Automatically hashes the raw password
+        
+        db.session.add(new_user)
+        db.session.commit()
+        
+        return jsonify({
+            "status": "success",
+            "message": "User account created successfully."
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": "Failed to create account due to a database exception."}), 500
