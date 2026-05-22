@@ -10,8 +10,7 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    CORS(app, origins=["http://127.0.0.1:8000", "http://localhost:8000"])
-
+    
     CORS(app)
     db.init_app(app)
 
