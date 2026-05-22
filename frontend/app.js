@@ -71,10 +71,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Handle registration form submission
+    // Handle registration form submission
     registerForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = document.getElementById("register-email").value;
         const password = document.getElementById("register-password").value;
+        const birthDate = document.getElementById("register-birth-date").value;
+        const birthTime = document.getElementById("register-birth-time").value;
+        const birthPlace = document.getElementById("register-birth-place").value;
 
         errorEl.classList.add("hidden");
         successEl.classList.add("hidden");
@@ -83,7 +87,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch(`${API_BASE}/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ 
+                    email: email, 
+                    password: password,
+                    birth_date: birthDate,
+                    birth_time: birthTime,
+                    birth_place: birthPlace
+                })
             });
 
             const data = await res.json();
