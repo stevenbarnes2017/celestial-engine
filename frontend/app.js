@@ -70,8 +70,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Handle registration form submission
-    // Handle registration form submission
+    
+    // Handle registration form submission with automated geocoding telemetry
     registerForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = document.getElementById("register-email").value;
@@ -82,8 +82,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
         errorEl.classList.add("hidden");
         successEl.classList.add("hidden");
+        
+        // Visual indicator that telemetry is calculating
+        const submitBtn = registerForm.querySelector("button[type='submit']");
+        const originalBtnText = submitBtn.textContent;
+        submitBtn.textContent = "CALCULATING TELEMETRY GRIDS...";
+        submitBtn.disabled = true;
 
         try {
+            // 1. Fetch Latitude & Longitude from OpenStreetMap Nominatim API
+            const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(birthPlace)}&limit=1`);
+            const geoData = await geoRes.json();
+
+            if (!geoData || geoData.length === 0) {
+                throw new Error("Could not resolve geospatial metrics for birth place location.");
+            }
+
+            const lat = parseFloat(geoData[0].lat);
+            const lon = parseFloat(geoData[0].lon);
+
+            // 2. Infer timezone offset mapping based on coordinates
+            // Using a free lookup or evaluating the native browser region as a fallback
+            let resolvedTimezone = "America/New_York"; // Default pipeline fallback
+            try {
+                const tzRes = await fetch(`https://www.timeapi.io/api/TimeZone/coordinate?latitude=${lat}&longitude=${lon}`);
+                if (tzRes.ok) {
+                    const tzData = await tzRes.json();
+                    resolvedTimezone = tzData.timeZone || resolvedTimezone;
+                }
+            } catch (tzErr) {
+                // Fail-safe: Fallback to evaluating regional location matrix if third-party time API times out
+                resolvedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            }
+
+            // 3. Ensure time format has seconds suffix if backend database expects HH:MM:SS
+            const formattedTime = birthTime.length === 5 ? `${birthTime}:00` : birthTime;
+
+            // 4. Route final compiled data payload to Render backend API
             const res = await fetch(`${API_BASE}/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -91,15 +126,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     email: email, 
                     password: password,
                     birth_date: birthDate,
-                    birth_time: birthTime,
-                    birth_place: birthPlace
+                    birth_time: formattedTime,
+                    birth_place: birthPlace,
+                    latitude: lat,
+                    longitude: lon,
+                    timezone: resolvedTimezone
                 })
             });
 
             const data = await res.json();
 
             if (res.ok) {
-                successEl.textContent = "Profile registered! You can now log in.";
+                successEl.textContent = "Profile registered! Telemetry mapped successfully.";
                 successEl.classList.remove("hidden");
                 registerForm.reset();
                 setTimeout(() => {
@@ -110,8 +148,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 errorEl.classList.remove("hidden");
             }
         } catch (err) {
-            errorEl.textContent = "Cannot route data to deployment database.";
+            errorEl.textContent = err.message || "Cannot route automated telemetry data to deployment database.";
             errorEl.classList.remove("hidden");
+        } finally {
+            // Reset button states
+            submitBtn.textContent = originalBtnText;
+            submitBtn.disabled = false;
         }
     });
 
