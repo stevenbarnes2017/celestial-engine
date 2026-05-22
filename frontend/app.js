@@ -1,8 +1,8 @@
 // Automatically toggles between your local dev environment and your live production URL
 const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
     ? "http://127.0.0.1:5000/api/auth"
-    : "https://your-backend-service-name.onrender.com/api/auth"; // <-- We will replace this string shortly
-    
+    : "https://celestial-engine-arba.onrender.com/api/auth";
+
 document.addEventListener("DOMContentLoaded", () => {
     const token = localStorage.getItem("celestial_token");
     
@@ -12,14 +12,41 @@ document.addEventListener("DOMContentLoaded", () => {
         showAuthGate();
     }
 
+    // Form Navigation Elements
+    const loginForm = document.getElementById("login-form");
+    const registerForm = document.getElementById("register-form");
+    const authSubtitle = document.getElementById("auth-subtitle");
+    const errorEl = document.getElementById("auth-error");
+    const successEl = document.getElementById("auth-success");
+
+    // Toggle to Registration View
+    document.getElementById("go-to-register").addEventListener("click", (e) => {
+        e.preventDefault();
+        errorEl.classList.add("hidden");
+        successEl.classList.add("hidden");
+        loginForm.classList.add("hidden");
+        registerForm.classList.remove("hidden");
+        authSubtitle.textContent = "REGISTER NEW OPERATOR DATA";
+    });
+
+    // Toggle back to Login View
+    document.getElementById("go-to-login").addEventListener("click", (e) => {
+        e.preventDefault();
+        errorEl.classList.add("hidden");
+        successEl.classList.add("hidden");
+        registerForm.classList.add("hidden");
+        loginForm.classList.remove("hidden");
+        authSubtitle.textContent = "AUTHENTICATE SYSTEM ACCESS";
+    });
+
     // Handle authentication form submission
-    document.getElementById("login-form").addEventListener("submit", async (e) => {
+    loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = document.getElementById("login-email").value;
         const password = document.getElementById("login-password").value;
-        const errorEl = document.getElementById("auth-error");
 
         errorEl.classList.add("hidden");
+        successEl.classList.add("hidden");
 
         try {
             const res = await fetch(`${API_BASE}/login`, {
@@ -43,6 +70,41 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // Handle registration form submission
+    registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("register-email").value;
+        const password = document.getElementById("register-password").value;
+
+        errorEl.classList.add("hidden");
+        successEl.classList.add("hidden");
+
+        try {
+            const res = await fetch(`${API_BASE}/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                successEl.textContent = "Profile registered! You can now log in.";
+                successEl.classList.remove("hidden");
+                registerForm.reset();
+                setTimeout(() => {
+                    document.getElementById("go-to-login").click();
+                }, 1500);
+            } else {
+                errorEl.textContent = data.error || "Registration validation rejected.";
+                errorEl.classList.remove("hidden");
+            }
+        } catch (err) {
+            errorEl.textContent = "Cannot route data to deployment database.";
+            errorEl.classList.remove("hidden");
+        }
+    });
+
     // Handle logout/disconnect
     document.getElementById("logout-btn").addEventListener("click", () => {
         localStorage.removeItem("celestial_token");
@@ -50,6 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// UI Views Toggle Logic
 function showAuthGate() {
     document.getElementById("auth-gate").classList.remove("hidden");
     document.getElementById("dashboard").classList.add("hidden");
@@ -61,7 +124,7 @@ function showDashboard() {
     fetchDailyForecast();
 }
 
-// Clean helper class without any accidental async syntax rules
+// Markdown Formatter Utility
 class DailyForecastWorker {
     static formatMarkdown(text) {
         return text
@@ -70,6 +133,7 @@ class DailyForecastWorker {
     }
 }
 
+// API Data Fetching Loop
 async function fetchDailyForecast() {
     const token = localStorage.getItem("celestial_token");
     const transitList = document.getElementById("transit-list");
@@ -93,7 +157,7 @@ async function fetchDailyForecast() {
             return;
         }
 
-        dateLabel.textContent = data.date_today || "2026-05-21";
+        dateLabel.textContent = data.date_today || "2026-05-22";
 
         transitList.innerHTML = "";
         if (data.active_geometric_transits && data.active_geometric_transits.length > 0) {

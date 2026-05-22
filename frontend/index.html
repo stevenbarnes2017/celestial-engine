@@ -9,24 +9,48 @@
 </head>
 <body class="bg-zinc-950 text-zinc-100 min-h-screen font-sans">
 
-    <div id="auth-gate" class="flex items-center justify-center min-h-screen px-4">
-        <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-xl max-w-md w-full shadow-2xl">
-            <h1 class="text-2xl font-bold mb-2 tracking-tight text-center">CELESTIAL ENGINE</h1>
-            <p class="text-zinc-400 text-sm mb-6 text-center">Enter credentials to unlock dual-system metrics.</p>
-            
+    <div id="auth-gate" class="min-h-screen flex items-center justify-center bg-zinc-950 px-4">
+        <div class="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-xl p-8 shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <h1 class="text-2xl font-bold tracking-wider text-zinc-100 font-mono">CELESTIAL//ENGINE</h1>
+                <p id="auth-subtitle" class="text-xs text-zinc-500 font-medium tracking-wide">AUTHENTICATE SYSTEM ACCESS</p>
+            </div>
+
+            <div id="auth-error" class="hidden bg-red-950/40 border border-red-900/50 text-red-400 text-xs p-3 rounded-lg font-mono text-center"></div>
+            <div id="auth-success" class="hidden bg-emerald-950/40 border border-emerald-900/50 text-emerald-400 text-xs p-3 rounded-lg font-mono text-center"></div>
+
             <form id="login-form" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">Email Address</label>
-                    <input type="email" id="login-email" required class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-zinc-200 focus:outline-none focus:border-zinc-600 transition">
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 font-mono font-bold">Email Address</label>
+                    <input type="email" id="login-email" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-zinc-700 transition font-mono">
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">Password</label>
-                    <input type="password" id="login-password" required class="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-zinc-200 focus:outline-none focus:border-zinc-600 transition">
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 font-mono font-bold">Access Password</label>
+                    <input type="password" id="login-password" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-zinc-700 transition font-mono">
                 </div>
-                <button type="submit" class="w-full bg-zinc-100 text-zinc-950 font-semibold py-2 rounded mt-2 hover:bg-zinc-200 transition cursor-pointer">
-                    Authenticate Session
+                <button type="submit" class="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-mono text-xs font-bold py-3 rounded-lg tracking-widest uppercase transition shadow-md">
+                    Verify Credentials
                 </button>
-                <p id="auth-error" class="text-red-400 text-xs mt-2 text-center hidden"></p>
+                <p class="text-center text-xs text-zinc-500 font-mono pt-2">
+                    New system entity? <a href="#" id="go-to-register" class="text-zinc-300 underline hover:text-zinc-100">Create an account</a>
+                </p>
+            </form>
+
+            <form id="register-form" class="space-y-4 hidden">
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 font-mono font-bold">Email Address</label>
+                    <input type="email" id="register-email" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-zinc-700 transition font-mono">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] uppercase tracking-widest text-zinc-500 font-mono font-bold">Choose Password</label>
+                    <input type="password" id="register-password" required class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-zinc-700 transition font-mono">
+                </div>
+                <button type="submit" class="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-100 font-mono text-xs font-bold py-3 rounded-lg tracking-widest uppercase transition shadow-md">
+                    Register System Profile
+                </button>
+                <p class="text-center text-xs text-zinc-500 font-mono pt-2">
+                    Existing operator? <a href="#" id="go-to-login" class="text-zinc-300 underline hover:text-zinc-100">Sign in here</a>
+                </p>
             </form>
         </div>
     </div>
