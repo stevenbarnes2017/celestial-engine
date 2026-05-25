@@ -197,7 +197,7 @@ class DynamicInterpretationEngine:
     # PERSONALIZED READING (with natal chart)
     # ========================================================================
 
-    def synthesize_chart_manifest(self, user_record) -> str:
+    def synthesize_chart_manifest(self, user_record):
         """Flattens stored database blocks into an information-dense text manifest."""
         planets = user_record.planetary_positions or {}
         aspects = user_record.planetary_aspects or []
@@ -227,7 +227,7 @@ class DynamicInterpretationEngine:
 
         return f"{western_manifest}{aspect_manifest}{bazi_manifest}"
 
-    def generate_authentic_horoscope(self, user_record) -> str:
+    def generate_authentic_horoscope(self, user_record):
         """
         Generates personalized natal chart interpretation combining Western and Eastern systems
         """
@@ -249,7 +249,7 @@ class DynamicInterpretationEngine:
 
         return self._generate_reading(system_prompt, user_prompt, max_tokens=1024)
 
-    def generate_daily_horoscope(self, user_record, active_transits) -> str:
+    def generate_daily_horoscope(self, user_record, active_transits):
         """
         Personalized daily horoscope using natal chart + current transits
         """
@@ -321,3 +321,32 @@ class DynamicInterpretationEngine:
             "Interpretation Engine Offline: GROQ_API_KEY environment variable is missing. "
             "Please configure your API key to enable AI-powered readings."
         )
+
+    def generate_sky_interpretation(self, current_positions, date_obj):
+        """
+        Generate interpretation of current planetary configuration
+        """
+        if not self.client:
+            return self._offline_message()
+
+        # Format planetary positions
+        positions_text = "CURRENT PLANETARY POSITIONS:\n"
+        for planet, data in current_positions.items():
+            positions_text += f"- {planet}: {data['absolute_degree']:.2f}° in {data['zodiac_sign']}\n"
+
+        system_prompt = (
+            "You are a master astrologer explaining the current cosmic weather to the general public. "
+            "Based on the current planetary positions, describe the overall energy and themes present today. "
+            "Focus on the collective mood, opportunities, and challenges that everyone might feel. "
+            "Structure: **Current Cosmic Climate** (overall feel), **Planetary Highlights** (notable positions), "
+            "**Collective Energy** (what's in the air), **Suggested Focus** (how to work with today's energy). "
+            "Write in an accessible, inspiring tone. Around 300-350 words."
+        )
+
+        user_prompt = (
+            f"Today's Date: {date_obj.strftime('%A, %B %d, %Y')}\n\n"
+            f"{positions_text}\n\n"
+            f"Interpret today's celestial configuration for a general audience."
+        )
+
+        return self._generate_reading(system_prompt, user_prompt, max_tokens=768)

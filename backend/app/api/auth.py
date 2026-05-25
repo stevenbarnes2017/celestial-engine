@@ -88,7 +88,132 @@ def register():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Failed to create account: {str(e)}"}), 500
+    
+@auth_bp.route('/register-complete', methods=['POST'])
+def register_complete():
+    """Complete registration with birth data and automatic chart calculation"""
+    data = request.get_json() or {}
+    
+    # Validate required fields
+    required_fields = ['email', 'password', 'birth_date', 'birth_time', 
+                      'timezone', 'latitude', 'longitude']
+    
+    missing = [f for f in required_fields if f not in data]
+    if missing:
+        return jsonify({"error": f"Missing required fields: {', '.join(missing)}"}), 400
 
+    # Check for existing user
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({"error": "An account with this email address already exists."}), 409
+
+    # Validate password strength
+    if len(data['password']) < 6:
+        return jsonify({"error": "Password must be at least 6 characters long."}), 400
+
+    try:
+        from datetime import datetime as dt
+        
+        # Parse birth data
+        birth_date = dt.strptime(data['birth_date'], '%Y-%m-%d').date()
+        birth_time = dt.strptime(data['birth_time'], '%H:%M').time()
+        
+        # Create user
+        new_user = User(
+            email=data['email'],
+            password_hash=security.generate_password_hash(data['password']),
+            birth_date=birth_date,
+            birth_time=birth_time,
+            timezone=data['timezone'],
+            latitude=data['latitude'],
+            longitude=data['longitude']
+        )
+        
+        # Calculate natal chart
+        try:
+            astro_engine = AstrologyEngine()
+            bazi_engine = BaziEngine()
+            aspect_engine = AspectEngine()
+            
+            # Western chart - use correct method names
+            planets = astro_engine.calculate_natal_planets(
+                birth_date,
+                birth_time,
+                data['timezone']
+            )
+            
+            houses = astro_engine.calculate_houses(
+                birth_date,
+                birth_time,
+                data['timezone'],
+                data['latitude'],
+                data['longitude']
+            )
+            
+            # Calculate aspects from planets
+            aspects = aspect_engine.calculate_aspects(planets)
+            
+            # Eastern BaZi
+            bazi_pillars = bazi_engine.compute_four_pillars(
+                birth_date,
+                birth_time,
+                data['timezone'],
+                data['longitude']
+            )
+            
+            # Store calculated data
+            new_user.planetary_positions = planets
+            new_user.house_cusps = houses
+            new_user.planetary_aspects = aspects
+            new_user.bazi_pillars = bazi_pillars
+            
+            # Extract angles from houses if available
+            if houses and 'angles' in houses:
+                new_user.chart_angles = houses['angles']
+            
+        except Exception as calc_error:
+            # Log error but allow registration to succeed
+            print(f"⚠️  Chart calculation error: {calc_error}")
+            # User can still login, charts calculated later
+        
+        db.session.add(new_user)
+        db.session.commit()
+        
+        # Auto-login
+        token = encode_auth_token(new_user.id)
+        
+        # Get preview data
+        sun_sign = "Unknown"
+        moon_sign = "Unknown"
+        rising_sign = "Unknown"
+        day_master = "Unknown"
+        
+        if new_user.planetary_positions:
+            sun_sign = new_user.planetary_positions.get('Sun', {}).get('zodiac_sign', 'Unknown')
+            moon_sign = new_user.planetary_positions.get('Moon', {}).get('zodiac_sign', 'Unknown')
+        
+        if new_user.chart_angles and 'Ascendant' in new_user.chart_angles:
+            rising_sign = new_user.chart_angles['Ascendant'].get('zodiac_sign', 'Unknown')
+        
+        if new_user.bazi_pillars and 'Day_Pillar' in new_user.bazi_pillars:
+            day_master = new_user.bazi_pillars['Day_Pillar'].get('Stem', 'Unknown')
+        
+        return jsonify({
+            "status": "success",
+            "message": "Account created and natal chart calculated!",
+            "token": token,
+            "chart_preview": {
+                "sun_sign": sun_sign,
+                "moon_sign": moon_sign,
+                "rising_sign": rising_sign,
+                "day_master": day_master
+            }
+        }), 201
+        
+    except ValueError as e:
+        return jsonify({"error": f"Invalid date/time format: {str(e)}"}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Failed to create account: {str(e)}"}), 500
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -146,6 +271,11 @@ def get_current_chart(current_user):
         }
         
         response_data["eastern_bazi"] = current_user.bazi_pillars or {}
+        
+        # Generate comprehensive interpretation if not already generated
+        if current_user.planetary_positions and current_user.bazi_pillars:
+            interpreter = DynamicInterpretationEngine()
+            response_data["authentic_horoscope"] = interpreter.generate_authentic_horoscope(current_user)
     else:
         # User hasn't provided birth data yet
         response_data["birth_telemetry"] = None
@@ -153,6 +283,30 @@ def get_current_chart(current_user):
         response_data["eastern_bazi"] = {"Year_Pillar": {"Branch": "Unknown"}}
 
     return jsonify(response_data), 200
+
+
+@auth_bp.route('/current-sky', methods=['GET'])
+@token_required
+def get_current_sky(current_user):
+    """
+    Returns current planetary positions and interpretation of today's celestial configuration
+    """
+    from datetime import datetime
+    
+    # Get current planetary positions
+    current_positions = get_current_planetary_positions()
+    today = datetime.now().date()
+    
+    # Generate interpretation of current sky
+    interpreter = DynamicInterpretationEngine()
+    sky_interpretation = interpreter.generate_sky_interpretation(current_positions, today)
+    
+    return jsonify({
+        "status": "success",
+        "current_date": today.isoformat(),
+        "current_positions": current_positions,
+        "interpretation": sky_interpretation
+    }), 200
 
 
 # ============================================================================
@@ -395,3 +549,15 @@ def get_daily_forecast(current_user):
     Legacy endpoint - redirects to new unified endpoint
     """
     return get_horoscope(current_user)
+
+@auth_bp.route('/test-engine', methods=['GET'])
+def test_engine():
+    """Temporary test to see what methods exist"""
+    astro_engine = AstrologyEngine()
+    
+    # Get all methods
+    methods = [method for method in dir(astro_engine) if not method.startswith('_')]
+    
+    return jsonify({
+        "available_methods": methods
+    })

@@ -2,9 +2,10 @@ from flask import request, jsonify
 from functools import wraps
 from app.models.user import User
 import jwt
+import os
 
 # Reference the same secret key used for token signing
-JWT_SECRET_KEY = "super-secret-celestial-key-change-me"
+JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'dev-cosmic-secret-key-1982')
 
 def token_required(f):
     """
