@@ -1,7 +1,7 @@
 // API Configuration
 const API_BASE = window.location.hostname.includes("127.0.0.1") || window.location.hostname.includes("localhost")
     ? "http://127.0.0.1:5000/api/auth"
-    : "https://celestial-engine-arba.onrender.com/api/auth";
+    : "https://celestial-api.sundaypickems.com/api/auth";
 
 console.log("🔍 Current hostname:", window.location.hostname);
 console.log("🎯 Using API_BASE:", API_BASE);
