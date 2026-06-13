@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from app import db
 from app.models.user import User
 from app.services.astrology_engine import AstrologyEngine
@@ -153,7 +153,7 @@ def register_complete():
             aspects = aspect_engine.calculate_aspects(planets)
             
             # Eastern BaZi
-            bazi_pillars = bazi_engine.compute_four_pillars(
+            bazi_pillars = bazi_engine.calculate_bazi(
                 birth_date,
                 birth_time,
                 data['timezone'],
@@ -243,8 +243,11 @@ def get_current_chart(current_user):
     """
     Returns the user's complete astrological profile.
     If birth data exists, returns calculations. Otherwise returns basic profile.
+    Self-heals: if birth data is present but the stored chart is missing
+    (e.g. a calc error was swallowed at registration), recomputes and persists
+    it before responding, so a one-time failure never becomes permanent.
     """
-    
+
     response_data = {
         "status": "success",
         "email": current_user.email,
@@ -253,26 +256,65 @@ def get_current_chart(current_user):
 
     # Check if user has birth data
     if current_user.birth_date and current_user.birth_time:
+
+        # Self-heal: recompute and store the chart if it's missing.
+        if not current_user.planetary_positions:
+            try:
+                astro = AstrologyEngine()
+                bazi = BaziEngine()
+                aspect = AspectEngine()
+
+                planets = astro.calculate_natal_planets(
+                    current_user.birth_date,
+                    current_user.birth_time,
+                    current_user.timezone
+                )
+                houses = astro.calculate_houses(
+                    current_user.birth_date,
+                    current_user.birth_time,
+                    current_user.timezone,
+                    current_user.latitude,
+                    current_user.longitude
+                )
+
+                current_user.planetary_positions = planets
+                current_user.house_cusps = houses
+                current_user.chart_angles = houses.get('angles') if houses else None
+                current_user.planetary_aspects = aspect.calculate_aspects(planets)
+                current_user.bazi_pillars = bazi.calculate_bazi(
+                    current_user.birth_date,
+                    current_user.birth_time,
+                    current_user.timezone,
+                    current_user.longitude
+                )
+
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                current_app.logger.exception(
+                    "On-demand chart recompute failed for user %s", current_user.id
+                )
+
         response_data["birth_telemetry"] = {
             "date": current_user.birth_date.isoformat(),
             "time": current_user.birth_time.strftime('%H:%M:%S'),
             "timezone": current_user.timezone,
             "coordinates": {
-                "latitude": current_user.latitude, 
+                "latitude": current_user.latitude,
                 "longitude": current_user.longitude
             }
         }
-        
+
         response_data["western_chart"] = {
             "planets": current_user.planetary_positions or {},
             "houses": current_user.house_cusps or {},
             "angles": current_user.chart_angles or {},
             "aspects": current_user.planetary_aspects or []
         }
-        
+
         response_data["eastern_bazi"] = current_user.bazi_pillars or {}
-        
-        # Generate comprehensive interpretation if not already generated
+
+        # Generate comprehensive interpretation if both halves are present
         if current_user.planetary_positions and current_user.bazi_pillars:
             interpreter = DynamicInterpretationEngine()
             response_data["authentic_horoscope"] = interpreter.generate_authentic_horoscope(current_user)
@@ -280,10 +322,9 @@ def get_current_chart(current_user):
         # User hasn't provided birth data yet
         response_data["birth_telemetry"] = None
         response_data["western_chart"] = {"planets": {"Sun": {"zodiac_sign": "Unknown"}}}
-        response_data["eastern_bazi"] = {"Year_Pillar": {"Branch": "Unknown"}}
+        response_data["eastern_bazi"] = {"Year_Bazi": {"Branch": "Unknown"}}  # see note
 
     return jsonify(response_data), 200
-
 
 @auth_bp.route('/current-sky', methods=['GET'])
 @token_required
