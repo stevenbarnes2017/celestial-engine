@@ -318,7 +318,7 @@ class DynamicInterpretationEngine:
     def _generate_reading(self, system_prompt, user_prompt, max_tokens=512):
         """Core reading generation with error handling"""
         try:
-            completion = self.client.chat.completions.create(
+            completion = self.client.models.generate_content(
                 model="gemini-2.5-flash",
                 messages=[
                     {"role": "system", "content": system_prompt},
