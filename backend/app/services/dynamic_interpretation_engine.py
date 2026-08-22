@@ -326,8 +326,14 @@ class DynamicInterpretationEngine:
                     system_instruction=system_prompt,
                     temperature=0.7,
                     max_output_tokens=max_tokens,
+                    thinking_config=types.ThinkingConfig(thinking_budget=0),
                 ),
             )
+
+            candidate = response.candidates[0] if response.candidates else None
+            if candidate and candidate.finish_reason == "MAX_TOKENS":
+                print(f"[WARN] Reading truncated at max_tokens={max_tokens}")
+
             return response.text
         except Exception as e:
             return f"Error generating reading: {str(e)}"
