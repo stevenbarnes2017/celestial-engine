@@ -1,4 +1,5 @@
 from app import db
+import datetime
 
 class HoroscopeCache(db.Model):
     __tablename__ = 'horoscope_cache'

@@ -2,6 +2,21 @@ import os
 from google import genai
 from google.genai import types
 from datetime import datetime
+from pydantic import BaseModel
+from typing import List
+
+
+class AspectInsight(BaseModel):
+    aspect_name: str
+    description: str
+
+
+class WesternDailyReading(BaseModel):
+    todays_energy: str
+    opportunities: List[AspectInsight]
+    challenges: List[AspectInsight]
+    focus_areas: List[str]
+
 
 class DynamicInterpretationEngine:
     def __init__(self):
@@ -19,38 +34,14 @@ class DynamicInterpretationEngine:
 
         # Format transits
         transit_text = self._format_transits(transits)
-        
-        
+
         system_prompt = (
-            """You are a professional Western astrologer writing daily horoscopes.
-            Create an engaging, authentic daily horoscope for the specified zodiac sign using the provided transit data.
-
-            STRICT FORMATTING INSTRUCTIONS:
-            1. Do NOT output raw lists of transits or standalone headers followed by isolated dashes.
-            2. Structure your response into these four exact sections using bold headings:
-            **Today's Energy**
-            [Paragraph overview of the general mood and cosmic themes]
-
-            **Opportunities**
-            - **[Aspect Name]**: [1-2 sentences on positive potential]
-            - **[Aspect Name]**: [1-2 sentences on creative or romantic wins]
-
-            **Challenges**
-            - **[Aspect Name]**: [1-2 sentences on obstacles or emotional friction]
-
-            **Focus Areas**
-            1. [Actionable takeaway 1]
-            2. [Actionable takeaway 2]
-
-            3. Write in a warm, insightful tone. Total length: 200-250 words.
-            4. Every bullet MUST be written on ONE continuous line with no line breaks. Example of the ONLY acceptable format:
-            - **Sun Trine Venus**: Your natural charm is amplified today, making it easy to connect with others.
-
-            Do NOT do this (splitting the name and description across lines):
-            -
-            **Sun Trine Venus**
-            : Your natural charm is amplified today.
-            """
+            "You are a professional Western astrologer writing daily horoscopes. "
+            "Create an engaging, authentic daily horoscope for the specified zodiac sign using the "
+            "provided transit data. Pick 2-3 of the most positive transits as 'opportunities' and "
+            "1-2 more challenging ones as 'challenges' — use the exact aspect name given "
+            "(e.g. 'Sun Trine Venus') for each. Give 2 concrete, actionable focus areas for the day. "
+            "Write in a warm, insightful tone, roughly 200-250 words total across all fields."
         )
 
         user_prompt = (
@@ -59,7 +50,11 @@ class DynamicInterpretationEngine:
             f"Create an authentic, helpful daily reading."
         )
 
-        return self._generate_reading(system_prompt, user_prompt, max_tokens=512)
+        data = self._generate_structured_reading(system_prompt, user_prompt, schema=WesternDailyReading)
+        if data is None:
+            return "Error generating reading: structured output failed."
+
+        return self._format_western_daily(data)
 
     def generate_western_weekly(self, sign, week_start, week_end):
         """Generate weekly Western horoscope"""
@@ -344,6 +339,44 @@ class DynamicInterpretationEngine:
             return response.text
         except Exception as e:
             return f"Error generating reading: {str(e)}"
+
+    def _generate_structured_reading(self, system_prompt, user_prompt, schema, max_tokens=768):
+        """Structured JSON generation — the schema is enforced by the API, so formatting can't drift."""
+        try:
+            response = self.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=0.7,
+                    max_output_tokens=max_tokens,
+                    thinking_config=types.ThinkingConfig(thinking_budget=0),
+                    response_mime_type="application/json",
+                    response_schema=schema,
+                ),
+            )
+
+            candidate = response.candidates[0] if response.candidates else None
+            if candidate and candidate.finish_reason == "MAX_TOKENS":
+                print(f"[WARN] Structured reading truncated at max_tokens={max_tokens}")
+
+            return response.parsed
+        except Exception as e:
+            print(f"[ERROR] Structured reading generation failed: {e}")
+            return None
+
+    def _format_western_daily(self, data: WesternDailyReading) -> str:
+        """Deterministically build the markdown so formatting can never drift from the model."""
+        lines = ["**Today's Energy**", "", data.todays_energy, "", "**Opportunities**"]
+        for item in data.opportunities:
+            lines.append(f"- **{item.aspect_name}**: {item.description}")
+        lines += ["", "**Challenges**"]
+        for item in data.challenges:
+            lines.append(f"- **{item.aspect_name}**: {item.description}")
+        lines += ["", "**Focus Areas**"]
+        for i, fa in enumerate(data.focus_areas, 1):
+            lines.append(f"{i}. {fa}")
+        return "\n".join(lines)
 
     def _offline_message(self):
         """Return when Gemini API is unavailable"""
