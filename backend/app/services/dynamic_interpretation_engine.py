@@ -1,5 +1,5 @@
 import os
-from google import genai
+from google.genai import types
 from datetime import datetime
 
 class DynamicInterpretationEngine:
@@ -318,16 +318,16 @@ class DynamicInterpretationEngine:
     def _generate_reading(self, system_prompt, user_prompt, max_tokens=512):
         """Core reading generation with error handling"""
         try:
-            completion = self.client.models.generate_content(
+            response = self.client.models.generate_content(
                 model="gemini-2.5-flash",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.7,
-                max_tokens=max_tokens
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=0.7,
+                    max_output_tokens=max_tokens,
+                ),
             )
-            return completion.choices[0].message.content
+            return response.text
         except Exception as e:
             return f"Error generating reading: {str(e)}"
 
