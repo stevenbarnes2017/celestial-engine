@@ -1,11 +1,11 @@
 import os
-from groq import Groq
+from google import genai
 from datetime import datetime
 
 class DynamicInterpretationEngine:
     def __init__(self):
-        self.api_key = os.environ.get("GROQ_API_KEY")
-        self.client = Groq(api_key=self.api_key) if self.api_key else None
+        self.api_key = os.environ.get("GEMINI_API_KEY")
+        self.client = genai.Client(api_key=self.api_key) if self.api_key else None
 
     # ========================================================================
     # WESTERN ASTROLOGY READINGS
@@ -254,7 +254,7 @@ class DynamicInterpretationEngine:
         Personalized daily horoscope using natal chart + current transits
         """
         if not self.client:
-            return "Groq Engine Offline: Cannot synthesize transit matrices."
+            return "Gemini Engine Offline: Cannot synthesize transit matrices."
 
         # Format transits
         transit_text = self._format_transits(active_transits)
@@ -303,7 +303,7 @@ class DynamicInterpretationEngine:
         """Core reading generation with error handling"""
         try:
             completion = self.client.chat.completions.create(
-                model="groq/compound",
+                model="gemini-2.5-flash",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -316,9 +316,9 @@ class DynamicInterpretationEngine:
             return f"Error generating reading: {str(e)}"
 
     def _offline_message(self):
-        """Return when Groq API is unavailable"""
+        """Return when Gemini API is unavailable"""
         return (
-            "Interpretation Engine Offline: GROQ_API_KEY environment variable is missing. "
+            "Interpretation Engine Offline: GEMINI_API_KEY environment variable is missing. "
             "Please configure your API key to enable AI-powered readings."
         )
 
