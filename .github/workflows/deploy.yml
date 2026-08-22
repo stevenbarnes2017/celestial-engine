@@ -17,14 +17,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.0
 
       - name: Verify secrets exist
         run: |
           [ -n "${{ secrets.HARBOR_REGISTRY }}" ] && echo "HARBOR_REGISTRY set" || (echo "HARBOR_REGISTRY missing" && exit 1)
           [ -n "${{ secrets.HARBOR_USERNAME }}" ] && echo "HARBOR_USERNAME set" || (echo "HARBOR_USERNAME missing" && exit 1)
           [ -n "${{ secrets.HARBOR_PASSWORD }}" ] && echo "HARBOR_PASSWORD set" || (echo "HARBOR_PASSWORD missing" && exit 1)
-          
 
       - name: Log in to Harbor
         uses: docker/login-action@v3
@@ -37,36 +36,15 @@ jobs:
         run: |
           docker build \
             -t ${{ secrets.HARBOR_REGISTRY }}/library/celestial-api:${IMAGE_TAG} \
-            -t ${{ secrets.HARBOR_REGISTRY }}/library/celestial-api:latest .
+            -t ${{ secrets.HARBOR_REGISTRY }}/library/celestial-api:latest \
+            -f celestial-engine/backend/dockerfile celestial-engine/backend/
 
       - name: Push Docker image
         run: |
           docker push ${{ secrets.HARBOR_REGISTRY }}/library/celestial-api:${IMAGE_TAG}
           docker push ${{ secrets.HARBOR_REGISTRY }}/library/celestial-api:latest
 
-      - name: Checkout GitOps repo
-        uses: actions/checkout@v4
-        with:
-          repository: stevenbarnes2017/k3s-proxmox-gitops
-          path: k3s-proxmox-gitops
-          ssh-key: ${{ secrets.GITOPS_DEPLOY_KEY }}
-
-      - name: Update GitOps image tags
+      - name: Restart K3s Deployment
         run: |
-          cd k3s-proxmox-gitops
-
-          echo "BEFORE:"
-          grep -R "celestial-api" -n kubernetes/
-
-          sed -i "s|image: .*celestial-api:.*|image: hub.lab.local/library/celestial-api:${IMAGE_TAG}|" \
-            kubernetes/celestial/deployment.yaml
-
-          echo "AFTER:"
-          grep -R "celestial-api" -n kubernetes/
-
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-
-          git add .
-          git commit -m "deploy: celestial-api ${IMAGE_TAG}" || echo "No changes to commit"
-          git push
+          kubectl rollout restart deployment celestial-api -n celestial
+          kubectl rollout status deployment celestial-api -n celestial
