@@ -37,7 +37,7 @@ jobs:
           docker build \
             -t ${{ secrets.HARBOR_REGISTRY }}/library/celestial-api:${IMAGE_TAG} \
             -t ${{ secrets.HARBOR_REGISTRY }}/library/celestial-api:latest \
-            -f celestial-engine/backend/dockerfile celestial-engine/backend/
+            -f backend/dockerfile backend/
 
       - name: Push Docker image
         run: |
