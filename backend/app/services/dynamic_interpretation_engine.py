@@ -303,7 +303,7 @@ class DynamicInterpretationEngine:
         """Core reading generation with error handling"""
         try:
             completion = self.client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
+                model="llama-3.3-70b-specdec",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
