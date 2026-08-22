@@ -1,60 +1,72 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: celestial-api
-  namespace: celestial
-  labels:
-    app: celestial-api
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: celestial-api
-  template:
-    metadata:
-      labels:
-        app: celestial-api
-    spec:
-      containers:
-        - name: celestial-api
-          image: hub.lab.local/library/celestial-api:latest
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 5000
-          env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: celestial-secrets
-                  key: DATABASE_URL
-            - name: SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: celestial-secrets
-                  key: SECRET_KEY
-            - name: JWT_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: celestial-secrets
-                  key: JWT_SECRET_KEY
-            - name: GLOBAL_FREE_BETA
-              value: "True"
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 5000
-            initialDelaySeconds: 10
-            periodSeconds: 15
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 5000
-            initialDelaySeconds: 30
-            periodSeconds: 30
-          resources:
-            requests:
-              memory: "256Mi"
-              cpu: "100m"
-            limits:
-              memory: "512Mi"
-              cpu: "500m"
+name: Build and Push Celestial API
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: celestial-api
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  build-and-push:
+    runs-on: [self-hosted]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify secrets exist
+        run: |
+          [ -n "${{ secrets.HARBOR_REGISTRY }}" ] && echo "HARBOR_REGISTRY set" || (echo "HARBOR_REGISTRY missing" && exit 1)
+          [ -n "${{ secrets.HARBOR_USERNAME }}" ] && echo "HARBOR_USERNAME set" || (echo "HARBOR_USERNAME missing" && exit 1)
+          [ -n "${{ secrets.HARBOR_PASSWORD }}" ] && echo "HARBOR_PASSWORD set" || (echo "HARBOR_PASSWORD missing" && exit 1)
+          [ -n "${{ secrets.GITOPS_DEPLOY_KEY }}" ] && echo "GITOPS_DEPLOY_KEY set" || (echo "GITOPS_DEPLOY_KEY missing" && exit 1)
+
+      - name: Log in to Harbor
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.HARBOR_REGISTRY }}
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ secrets.HARBOR_REGISTRY }}/library/celestial-api:${IMAGE_TAG} \
+            -t ${{ secrets.HARBOR_REGISTRY }}/library/celestial-api:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.HARBOR_REGISTRY }}/library/celestial-api:${IMAGE_TAG}
+          docker push ${{ secrets.HARBOR_REGISTRY }}/library/celestial-api:latest
+
+      - name: Checkout GitOps repo
+        uses: actions/checkout@v4
+        with:
+          repository: stevenbarnes2017/k3s-proxmox-gitops
+          path: k3s-proxmox-gitops
+          ssh-key: ${{ secrets.GITOPS_DEPLOY_KEY }}
+
+      - name: Update GitOps image tags
+        run: |
+          cd k3s-proxmox-gitops
+
+          echo "BEFORE:"
+          grep -R "celestial-api" -n kubernetes/
+
+          sed -i "s|image: .*celestial-api:.*|image: hub.lab.local/library/celestial-api:${IMAGE_TAG}|" \
+            kubernetes/celestial/deployment.yaml
+
+          echo "AFTER:"
+          grep -R "celestial-api" -n kubernetes/
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add .
+          git commit -m "deploy: celestial-api ${IMAGE_TAG}" || echo "No changes to commit"
+          git push
