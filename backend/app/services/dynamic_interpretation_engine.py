@@ -20,13 +20,29 @@ class DynamicInterpretationEngine:
         transit_text = self._format_transits(transits)
         
         system_prompt = (
-            "You are a professional Western astrologer writing daily horoscopes. "
-            "Create an engaging, authentic daily horoscope for the specified zodiac sign. "
-            "Use current planetary transits to inform your reading. Focus on practical guidance, "
-            "emotional insights, and opportunities for the day. Write in a warm, insightful tone. "
-            "Structure: **Today's Energy** (overview), **Opportunities** (what to pursue), "
-            "**Challenges** (what to watch for), **Focus Areas** (key themes). "
-            "Keep it conversational and helpful, around 200-250 words."
+           """You are a professional Western astrologer writing daily horoscopes.
+            Create an engaging, authentic daily horoscope for the specified zodiac sign using the provided transit data.
+
+            STRICT FORMATTING INSTRUCTIONS:
+            1. Do NOT output raw lists of transits or standalone headers followed by isolated dashes.
+            2. Structure your response into these four exact sections using bold headings:
+            **Today's Energy**
+            [Paragraph overview of the general mood and cosmic themes]
+
+            **Opportunities**
+            - **[Aspect Name]**: [1-2 sentences on positive potential]
+            - **[Aspect Name]**: [1-2 sentences on creative or romantic wins]
+
+            **Challenges**
+            - **[Aspect Name]**: [1-2 sentences on obstacles or emotional friction]
+
+            **Focus Areas**
+            1. [Actionable takeaway 1]
+            2. [Actionable takeaway 2]
+
+            3. Write in a warm, insightful tone. Total length: 200-250 words.
+            4. Keep all bullet points on a SINGLE line formatted exactly as `- **Heading**: Description`. Do not split headings and descriptions onto new lines.
+            """
         )
 
         user_prompt = (
