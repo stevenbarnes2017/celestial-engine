@@ -20,8 +20,9 @@ class DynamicInterpretationEngine:
         # Format transits
         transit_text = self._format_transits(transits)
         
+        
         system_prompt = (
-           """You are a professional Western astrologer writing daily horoscopes.
+            """You are a professional Western astrologer writing daily horoscopes.
             Create an engaging, authentic daily horoscope for the specified zodiac sign using the provided transit data.
 
             STRICT FORMATTING INSTRUCTIONS:
@@ -42,7 +43,13 @@ class DynamicInterpretationEngine:
             2. [Actionable takeaway 2]
 
             3. Write in a warm, insightful tone. Total length: 200-250 words.
-            4. Keep all bullet points on a SINGLE line formatted exactly as `- **Heading**: Description`. Do not split headings and descriptions onto new lines.
+            4. Every bullet MUST be written on ONE continuous line with no line breaks. Example of the ONLY acceptable format:
+            - **Sun Trine Venus**: Your natural charm is amplified today, making it easy to connect with others.
+
+            Do NOT do this (splitting the name and description across lines):
+            -
+            **Sun Trine Venus**
+            : Your natural charm is amplified today.
             """
         )
 
