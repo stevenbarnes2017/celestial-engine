@@ -1058,7 +1058,11 @@ function updateDate(dateStr) {
 
 function formatMarkdown(text) {
     return text
-        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-zinc-100 font-bold block text-base mt-4 mb-1">$1</strong>')
+        // A line that is ENTIRELY bold is a section heading (e.g. **Opportunities**) — block-level.
+        .replace(/^\*\*(.+?)\*\*$/gm, '<strong class="text-zinc-100 font-bold block text-base mt-4 mb-1">$1</strong>')
+        // Any bold left over is inline (e.g. **Sun Trine Venus** inside a bullet line) — must NOT be block,
+        // or it breaks onto its own line and strands the surrounding "-" and ": description" text.
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-zinc-100 font-semibold">$1</strong>')
         .replace(/\*(.*?)\*/g, '<em class="text-violet-300">$1</em>')
         .replace(/\n\n/g, '</p><p class="mt-3">')
         .replace(/\n/g, '<br>');
