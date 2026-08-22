@@ -303,7 +303,7 @@ class DynamicInterpretationEngine:
         """Core reading generation with error handling"""
         try:
             completion = self.client.chat.completions.create(
-                model="groq/compund",
+                model="groq/compound",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
